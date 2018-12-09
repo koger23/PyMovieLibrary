@@ -1,0 +1,97 @@
+QWidget {
+    background-color: #000;
+    color: #cccccc
+}
+
+#filterField {
+    background-color:transparent;
+    border: 0px;
+    font: 14pt "Helvetica";
+}
+
+#filterField:hover {
+    border: 1px solid #888;
+}
+
+QLabel {
+    background-color:transparent;
+    font: 10pt "Helvetica";
+    color: #cccccc
+}
+
+#movieTitle {
+    font: 26pt "Helvetica";
+    color: #8fdcef;
+}
+
+#details {
+    font: 14pt "Helvetica";
+    color: #cccccc;
+}
+
+#separator {
+    color: rgba(255,255,255,20%);
+}
+
+QScrollBar::handle:vertical {
+    border: 0px solid #333;
+    background:#222;
+}
+
+QTextEdit {
+    background-color:transparent;
+    border: 0px;
+    font: 10pt "Helvetica";
+}
+
+QFrame {
+    background-color:transparent;
+}
+
+#castList {
+    font: 9pt "Helvetica";
+}
+
+QListWidget {
+    background-color:transparent;
+    border: 0px;
+}
+
+QPushButton {
+    background-color: transparent;
+    border: 0px;
+    padding: 3px 15px 4px 15px;
+    color:#cccccc
+}
+QPushButton:pressed {
+    padding: 4px 14px 3px 16px;
+}
+QPushButton:hover {
+    background-color: rgba(143, 220, 239, 25%);
+}
+
+QPushButton:checked{
+    background-color: rgba(0, 0, 0, 80%);
+    color: #222;
+}
+
+QProgressBar{
+    border: 1px solid grey;
+    text-align: center;
+    color: #fff;
+}
+
+QProgressBar:chunk {
+    background-color: #3e5974;
+    width: 10px;
+    margin: 1px;
+}
+
+#wishField {
+    background-color:transparent;
+    border: 0px;
+    font: 10pt "Helvetica";
+}
+#wishField:hover {
+    border: 1px solid #888;
+}
