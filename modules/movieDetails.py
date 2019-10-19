@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PySide.QtGui import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QPixmap
+
 import customWidgets
 
 reload(customWidgets)
@@ -12,7 +13,7 @@ class MovieDetails(QWidget):
     def __init__(self, mainWindow):
         super(MovieDetails, self).__init__()
 
-        self.mainWindow = mainWindow  # hogy el tudjon minden hideolni
+        self.mainWindow = mainWindow
         mainLayout = QVBoxLayout()
         self.setLayout(mainLayout)
 
@@ -39,7 +40,6 @@ class MovieDetails(QWidget):
         detailsLayout.addWidget(self.movieText)
 
     def setMovie(self):
-
         self.setVisible(True)
 
         self.mainWindow.movieList.setVisible(False)
@@ -52,7 +52,6 @@ class MovieDetails(QWidget):
         self.movieText.setText(self.currentMovieObj.description)
 
     def backClickedAction(self):
-
         self.setVisible(False)
 
         self.mainWindow.movieList.setVisible(True)

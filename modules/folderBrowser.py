@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from sys import platform
+
 from PySide.QtGui import QWidget, QListWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QListWidgetItem, \
     QIcon
-from sys import platform
-from utils import fileUtils, DB_utils
+
 from objects import movie, dataDownloader
+from utils import fileUtils, DB_utils
 
 reload(fileUtils)
 reload(movie)
 reload(DB_utils)
 reload(dataDownloader)
+
 
 class FolderBrowser(QWidget):
 
@@ -18,7 +21,7 @@ class FolderBrowser(QWidget):
         self.setMaximumWidth(300)
 
         mainLayout = QVBoxLayout()
-        mainLayout.setContentsMargins(0, 0, 0, 0)  # kell, hogy a modulok egyforman illeszkedjenek
+        mainLayout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(mainLayout)
 
         self.browser = BrowserView()
@@ -37,11 +40,10 @@ class FolderBrowser(QWidget):
         buttonLayout.addWidget(removeFolder_bttn)
 
         # Load config file
-        self.config = fileUtils.loadConfig()
+        self.config = fileUtils.load_config()
         self.browser.refreshView(self.config)
 
         # Progressbar
-
 
     def addFolder(self):
 
@@ -49,68 +51,60 @@ class FolderBrowser(QWidget):
 
         if len(folder):
 
-            if not folder in self.config["folders"]:
+            if folder not in self.config["folders"]:
                 self.config["folders"].append(folder)
 
-            fileUtils.saveConfig(self.config)
+            fileUtils.save_config(self.config)
             self.browser.refreshView(self.config)
 
     def removeFolder(self):
 
-        if not self.browser.currentItem(): return
+        if not self.browser.currentItem():
+            return
 
         folderPath = self.browser.currentItem().path
 
         self.config["folders"].remove(folderPath)
 
-        fileUtils.saveConfig(self.config)
+        fileUtils.save_config(self.config)
 
         self.browser.refreshView(self.config)
 
 
 class BrowserView(QListWidget):
-    """
-    Erre azert van szukseg, mert ha pl. torlok egy mappat, akkor nem akarom, hogy a browser resze legyen
-    """
 
     def __init__(self):
         super(BrowserView, self).__init__()
 
-        self.currentFolder = None # feltöltődik későbbi meghíváskor, hogy elkerüljük az attr. errort
+        self.currentFolder = None
 
         self.movieObjects = []
 
         self.itemClicked.connect(self.setCurrentFolder)
 
-        self.dataDownloader = dataDownloader.DataDownloader() # így hozzá férünk bárhonnan
-
+        self.dataDownloader = dataDownloader.DataDownloader()
 
     def setCurrentFolder(self):
 
         self.movieObjects = []
         self.currentFolder = self.currentItem().path
 
-        files = fileUtils.getMovies(self.currentFolder)
+        files = fileUtils.get_movies(self.currentFolder)
 
         for filePath in files:
             movieObj = movie.Movie(filePath)
 
             # Check in DataBase
-            movieData = DB_utils.getMoviesByPath(movieObj.path)
+            movieData = DB_utils.get_movies_by_path(movieObj.path)
 
             if movieData:
-                # pass data to movie object
                 movieObj.setData(movieData)
-
-
             else:
                 self.dataDownloader.addMovie(movieObj)
-
 
             self.movieObjects.append(movieObj)
 
         self.dataDownloader.startDownload()
-
 
     def refreshView(self, config):
         self.clear()
@@ -123,25 +117,22 @@ class BrowserView(QListWidget):
 
 
 class FolderItem(QListWidgetItem):
-    """
-    Azert hoztuk letre, hogy tarolni tudjuk az utvonalat kulon es az utolso mappat is.
-    """
 
     def __init__(self, path, parent):
-            super(FolderItem, self).__init__(parent)
+        super(FolderItem, self).__init__(parent)
 
-            folderName = ""
+        folderName = ""
 
-            self.path = path
+        self.path = path
 
-            if platform == "linux" or platform == "linux2":
-                folderName = path.split("/")[-1]
-            elif platform == "win32":
-                folderName = path.split("\\")[-1]
+        if platform == "linux" or platform == "linux2":
+            folderName = path.split("/")[-1]
+        elif platform == "win32":
+            folderName = path.split("\\")[-1]
 
-            self.setText(folderName)
-            self.setToolTip(path)
-            self.setIcon(QIcon(fileUtils.getIcon("folder")))
+        self.setText(folderName)
+        self.setToolTip(path)
+        self.setIcon(QIcon(fileUtils.get_icon("folder")))
 
 
 if __name__ == '__main__':

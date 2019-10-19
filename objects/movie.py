@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from utils import fileUtils, DB_utils
 import os
+
+from utils import fileUtils, DB_utils
 
 reload(fileUtils)
 reload(DB_utils)
 
 
-class Movie():
+class Movie:
 
     def __init__(self, path):
         self.id = None
@@ -18,10 +19,8 @@ class Movie():
         self.description = None
         self.date = None
         self.watched = None
-        self.poster = fileUtils.getIcon("collectingData")
+        self.poster = fileUtils.get_icon("collectingData")
         self.backdrop = None
-
-        # self.setData()
 
     def setName(self):
         return os.path.basename(self.path)[:-4]

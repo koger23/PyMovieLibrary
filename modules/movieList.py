@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from PySide.QtCore import QSize, QRect, Qt  # QRectF az floating point osztály nem egész méretekhez
 from PySide.QtGui import QWidget, QListWidget, QLineEdit, QHBoxLayout, QVBoxLayout, QListWidgetItem, \
-    QStyledItemDelegate, QBrush, QColor, QPen, QFont, QPixmap, QStyle, QMessageBox     # QItemDelegate akkor kell, ha nem használunk css fájlt cusomizációra
+    QStyledItemDelegate, QBrush, QColor, QPen, QFont, QPixmap, QStyle, \
+    QMessageBox  # QItemDelegate akkor kell, ha nem használunk css fájlt cusomizációra
+
+from modules import customWidgets
+from utils import fileUtils, DB_utils
 
 # QBrush - itemek háttérsz0ne
 # QPen - körvonalak és szövegek szine
 # QColor - csak ezzel lehet a fenti két osztálynak szineket
 
-from PySide.QtCore import QSize, QRect, Qt # QRectF az floating point osztály nem egész méretekhez
-from utils import fileUtils, DB_utils
-from modules import customWidgets
-
 reload(fileUtils)
 reload(customWidgets)
+
 
 class MovieList(QWidget):
 
@@ -39,7 +41,6 @@ class MovieList(QWidget):
         self.movieList = MovieBrowser(folderBrowser)
         mainLayout.addWidget(self.movieList)
 
-
         self.progressBar = customWidgets.MyProgress()
         mainLayout.addWidget(self.progressBar)
         self.progressBar.setVisible(True)
@@ -58,11 +59,9 @@ class MovieBrowser(QListWidget):
         self.setResizeMode(QListWidget.Adjust)
         self.setMovement(QListWidget.Static)
         self.setSpacing(10)
-        # ItemDelegate egy Painter osztály. Azért dolgozik, hogy hogyan rajzolódjon ki a lista tartalma
         self.setItemDelegate(MyDelegate())
 
         self.currentMovie = None
-
 
         self.folderBrowser = folderBrowser
         self.folderBrowser.itemClicked.connect(self.refresh)
@@ -89,7 +88,6 @@ class MovieBrowser(QListWidget):
 
         selectedMovie = self.getSelectedMovie()
 
-        # If delete button is pressed:
         if event.key() == Qt.Key_Delete:
             if not selectedMovie: return
 
@@ -105,17 +103,17 @@ class MovieBrowser(QListWidget):
                 print "Deleting: " + str(selectedMovie.name)
 
                 try:
-                    DB_utils.deleteMovie(selectedMovie.id)
+                    DB_utils.delete_movie(selectedMovie.id)
                     print "Movie deleted from MongoDB..."
                 except:
                     print "Error deleting movie from MongoDB " + str(selectedMovie.id)
                 try:
-                    fileUtils.deleteMovieFile(selectedMovie.path)
+                    fileUtils.delete_movie_file(selectedMovie.path)
                     print "Movie file deleted..."
                 except:
                     print "Error deleting movie file: " + str(selectedMovie.path)
                 try:
-                    fileUtils.deleteMovieFile(poster)
+                    fileUtils.delete_movie_file(poster)
                     print "Deleting poster: " + str(poster)
                 except:
                     print "Error deleting movie poster: " + str(poster)
@@ -125,16 +123,16 @@ class MovieBrowser(QListWidget):
 
     def setWatched(self):
 
-        selectedMovie =  self.getSelectedMovie()
+        selectedMovie = self.getSelectedMovie()
 
         if selectedMovie:
-            # selectedMovie.setMovieAsWatched()
+
             if selectedMovie.watched == 0:
                 selectedMovie.watched = 1
-                DB_utils.updateMovieStatus(selectedMovie.id, selectedMovie.watched)
+                DB_utils.update_movie_status(selectedMovie.id, selectedMovie.watched)
             else:
                 selectedMovie.watched = 0
-                DB_utils.updateMovieStatus(selectedMovie.id, selectedMovie.watched)
+                DB_utils.update_movie_status(selectedMovie.id, selectedMovie.watched)
 
             self.refresh()
 
@@ -145,11 +143,12 @@ class MovieBrowser(QListWidget):
         self.refresh()
 
     def refresh(self):
-        self.clear() # Itt csak egy self kell, mert már benne vagyunk a ListWidget-ben
+        self.clear()
 
         for movieObj in self.folderBrowser.movieObjects:
-            movieItem = MovieItem(movieObj, self) # a self azért kell, mert ebbe a listába akarjuk ezeket létrehozni
+            movieItem = MovieItem(movieObj, self)
         self.getMoviesQty()
+
 
 class MovieItem(QListWidgetItem):
 
@@ -158,9 +157,10 @@ class MovieItem(QListWidgetItem):
 
         self.movieObj = movieObj
 
-        self.setSizeHint(QSize(310, 500)) # ez valójában a helyfoglalást állitja be
+        self.setSizeHint(QSize(310, 500))
 
-        self.setData(Qt.UserRole, movieObj) # itt adatot hozunk létre, amit át tud adni Q itemeknek. Ez egy channel
+        self.setData(Qt.UserRole, movieObj)
+
 
 class MyDelegate(QStyledItemDelegate):
 
@@ -177,7 +177,7 @@ class MyDelegate(QStyledItemDelegate):
         self.transparentBG = QBrush(QColor(255, 255, 255, 60))
         self.watchedBG = QBrush(QColor(0, 0, 0, 180))
         self.unWatchedBG = QBrush(QColor(0, 0, 0, 0))
-        # self.selectedOutline.setWidth(4) # a vonal kirajzolás bugos
+        # self.selectedOutline.setWidth(4) # buggy line drawing
 
         self.font = QFont()
         self.font.setPointSize(13)
@@ -185,12 +185,11 @@ class MyDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         """ Overrideoljuk a saját igényeinkre"""
 
-        rect = option.rect # egérrel kattintásnál megjelenő négyzet bal felső sarkának a helyzete és a szöveg magassága és hossza
+        rect = option.rect
 
         movieObj = index.data(Qt.UserRole)
 
         # BACKGROUND rect
-
         painter.setPen(Qt.NoPen)
 
         if option.state & QStyle.State_Selected:
@@ -198,8 +197,6 @@ class MyDelegate(QStyledItemDelegate):
         else:
             painter.setBrush(self.bgColor)
 
-
-        # átadjuk a négyzet rajzoló függvénynek az itemek bal felső poz0cióit, més megadjuk a méretet
         painter.drawRect(rect)
 
         # POSTER rect
@@ -216,7 +213,6 @@ class MyDelegate(QStyledItemDelegate):
         titleRect = QRect(pixmapRect.left(), pixmapRect.bottom(), pixmapRect.width(), 40)
         painter.drawText(titleRect, Qt.AlignVCenter | Qt.AlignHCenter, movieObj.name)
 
-
         if option.state & QStyle.State_Selected:
             painter.setPen(Qt.NoPen)
             painter.setBrush(self.transparentBG)
@@ -225,14 +221,14 @@ class MyDelegate(QStyledItemDelegate):
         if movieObj.getMovieWatchedStatus() == 1:
 
             watchedRect = QRect(rect.x() + 2, rect.y() + 2, 25, 25)
-            watchedIcon = QPixmap(fileUtils.getIcon("watchedfiltericon"))
+            watchedIcon = QPixmap(fileUtils.get_icon("watchedfiltericon"))
             painter.setBrush(self.watchedBG)
             painter.drawPixmap(watchedRect, watchedIcon)
             painter.setBrush(self.watchedBG)
             painter.setPen(Qt.NoPen)
-            painter.drawRect(QRect(rect.x()-2, rect.y()-2, rect.width()+4, rect.height()+4))
+            painter.drawRect(QRect(rect.x() - 2, rect.y() - 2, rect.width() + 4, rect.height() + 4))
 
         elif movieObj.getMovieWatchedStatus() == 0:
             painter.setBrush(self.unWatchedBG)
             painter.setPen(Qt.NoPen)
-            painter.drawRect(QRect(rect.x()-2, rect.y()-2, rect.width()+4, rect.height()+4))
+            painter.drawRect(QRect(rect.x() - 2, rect.y() - 2, rect.width() + 4, rect.height() + 4))

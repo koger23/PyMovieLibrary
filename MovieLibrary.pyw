@@ -45,7 +45,7 @@ class MovieLibrary(QMainWindow):
 
     def applyStyle(self):
 
-        with open(fileUtils.getIcon("style"), "r") as styleFile:
+        with open(fileUtils.get_icon("style"), "r") as styleFile:
             style = styleFile.read()
 
         self.setStyleSheet(style)
