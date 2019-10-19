@@ -3,11 +3,13 @@
 from PySide.QtGui import QWidget, QListWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QListWidgetItem, \
     QIcon
 from sys import platform
-from utils import fileUtils
-from objects import movie
+from utils import fileUtils, DB_utils
+from objects import movie, dataDownloader
 
 reload(fileUtils)
 reload(movie)
+reload(DB_utils)
+reload(dataDownloader)
 
 class FolderBrowser(QWidget):
 
@@ -37,6 +39,9 @@ class FolderBrowser(QWidget):
         # Load config file
         self.config = fileUtils.loadConfig()
         self.browser.refreshView(self.config)
+
+        # Progressbar
+
 
     def addFolder(self):
 
@@ -73,24 +78,39 @@ class BrowserView(QListWidget):
 
         self.currentFolder = None # feltöltődik későbbi meghíváskor, hogy elkerüljük az attr. errort
 
-        self.movieFiles = []
+        self.movieObjects = []
 
         self.itemClicked.connect(self.setCurrentFolder)
 
+        self.dataDownloader = dataDownloader.DataDownloader() # így hozzá férünk bárhonnan
+
+
     def setCurrentFolder(self):
 
+        self.movieObjects = []
         self.currentFolder = self.currentItem().path
 
-        self.movieFiles = []
+        files = fileUtils.getMovies(self.currentFolder)
 
-        for file in fileUtils.getMovies(self.currentFolder):
+        for filePath in files:
+            movieObj = movie.Movie(filePath)
 
-            movieObj = movie.Movie(file)
+            # Check in DataBase
+            movieData = DB_utils.getMoviesByPath(movieObj.path)
 
-            self.movieFiles.append(movieObj)
+            if movieData:
+                # pass data to movie object
+                movieObj.setData(movieData)
 
 
-        # self.movieFiles = fileUtils.getMovies(self.currentFolder)
+            else:
+                self.dataDownloader.addMovie(movieObj)
+
+
+            self.movieObjects.append(movieObj)
+
+        self.dataDownloader.startDownload()
+
 
     def refreshView(self, config):
         self.clear()
@@ -108,18 +128,20 @@ class FolderItem(QListWidgetItem):
     """
 
     def __init__(self, path, parent):
-        super(FolderItem, self).__init__(parent)
+            super(FolderItem, self).__init__(parent)
 
-        self.path = path
+            folderName = ""
 
-        if platform == "linux" or platform == "linux2":
-            folderName = path.split("/")[-1]
-        elif platform == "win32":
-            folderName = path.split("\\")[-1]
+            self.path = path
 
-        self.setText(folderName)
-        self.setToolTip(path)
-        self.setIcon(QIcon(fileUtils.getIcon("folder")))
+            if platform == "linux" or platform == "linux2":
+                folderName = path.split("/")[-1]
+            elif platform == "win32":
+                folderName = path.split("\\")[-1]
+
+            self.setText(folderName)
+            self.setToolTip(path)
+            self.setIcon(QIcon(fileUtils.getIcon("folder")))
 
 
 if __name__ == '__main__':

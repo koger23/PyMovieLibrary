@@ -11,39 +11,45 @@ reload(DB_utils)
 class Movie():
 
     def __init__(self, path):
+        self.id = None
         self.path = path
         self.name = self.setName()
-        self.dataFile = path.replace(".mkv", ".json")
+        self.originalTitle = None
+        self.description = None
         self.date = None
-        self.watched = False
+        self.watched = None
         self.poster = fileUtils.getIcon("collectingData")
-        self.data = self.getData()
+        self.backdrop = None
 
+        # self.setData()
 
     def setName(self):
-        return os.path.basename(self.path).upper()[:-4]
+        return os.path.basename(self.path)[:-4]
+        # return self.path.split("\\")[-1].replace(".mkv", "")
 
-    def getData(self):
+    def setData(self, movieData=None):
+        """For MongoDB"""
 
-        if not os.path.exists(self.dataFile):
-            data = DB_utils.getMovieDataByTitle(self.name)
-        else:
-            data = fileUtils.loadMovieData(self.dataFile)
+        if movieData:
+            self.id = movieData["_id"]
+            self.date = movieData["release_date"]
+            self.originalTitle = movieData["original_title"]
+            self.poster = movieData["poster"]
+            self.description = movieData["overview"]
+            self.backdrop = movieData["backdrop_path"]
+            self.watched = movieData["watched"]
 
-        if data:
-            # Save datas as JSON file next to the movie
-            fileUtils.saveMovieData(self.dataFile, data)
+    def startMovie(self):
+        os.startfile(self.path)
 
-            self.name = data["title"]
-            self.date = data["release_date"]
+    def getMovieWatchedStatus(self):
+        return self.watched
 
-            # Download Poster
-            self.poster = DB_utils.downloadPoster(self.path, data["poster_path"])
-
-            return data
-
-        return {}
-
+    def setMovieAsWatched(self):
+        if self.watched == 0:
+            self.watched = 1
+        elif self.watched == 1:
+            self.watched = 0
 
     def delete(self):
 

@@ -7,7 +7,9 @@ def getIcon(iconName):
 
     icons = {"folder":os.path.join(ICONS, "icon_folder.png"),
              "collectingData":os.path.join(ICONS, "defaultIcon.png"),
-             "style":os.path.join(ICONS, "style.qss")}
+             "style":os.path.join(ICONS, "style.qss"),
+             "watchedicon":os.path.join(ICONS, "icon_checked.png"),
+             "watchedfiltericon":os.path.join(ICONS, "icon_watchList.png")}
     return icons[iconName]
 
 
@@ -19,7 +21,6 @@ def saveConfig(data):
 
     with open(configFile, "w") as dataFile:
         json.dump(data, dataFile)
-
 
 def loadConfig():
 
@@ -37,3 +38,7 @@ def saveMovieData(path, data):
 def loadMovieData(path):
     with open(path, "r") as dataFile:
         return json.load(dataFile)
+
+def deleteMovieFile(path):
+    if os.path.exists(path):
+        os.remove(path)

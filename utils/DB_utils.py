@@ -2,32 +2,84 @@
 # -*- coding: utf-8 -*-
 
 
-import tmdbsimple as tmdb
-import os, urllib2, pymongo
+from pymongo import MongoClient
+from bson import ObjectId
 
-tmdb.API_KEY = "ae19b8450bb5b60ea4dad3529cb44d65"
+# MongoDB
+def getDBconnection():
+    client = MongoClient("localhost", 27017)
+    db = client["MovieLibrary"]
+    collection = db["Movies"]
+    return collection
+
+def insertMovie(movieData):
+    return getDBconnection().insert(movieData)
+
+def getMoviesByPath(filePath):
+    collection = getDBconnection()
+    result = collection.find_one({"path": filePath})
+
+    return result
 
 
-def getMovieDataByTitle(title):
-    search = tmdb.Search()
-    response = search.movie(query=title)
+def getMoviesByFolder(folder):
+    collection = getDBconnection()
+    result = collection.find({"folder": folder})
 
-    posterPathString = "https://image.tmdb.org/t/p/w300/"
-    backdropPathString = "https://image.tmdb.org/t/p/w500/"
+    movies = []
 
-    returnDic = search.results[0]
-    returnDic["poster_path"] = posterPathString + returnDic["poster_path"]
-
-    return returnDic
-
+    if result:
+        for i in result:
+            movies.append(i)
+    return movies
 
 
-def downloadPoster(filePath, posterLink):
+def getMovies(id = None, folder = None):
 
-    posterPath = filePath.replace(".mkv", ".jpg")
+    collection = getDBconnection()
 
-    if not os.path.exists(posterPath):
-        f = open(posterPath, "wb")
-        f.write(urllib2.urlopen(posterLink).read())
-        f.close()
-    return posterPath
+    result = []
+
+    if not id:
+        for movie in collection.find({}):
+            result.append(movie)
+
+    else:
+        result.append(collection.find_one({"_id":ObjectId(id)}))
+
+    if folder:
+        result.append(collection.find_one({"poster":ObjectId(id)}))
+
+
+    return result
+
+def updateMovieStatus(id, watchedStatus):
+
+    collection = getDBconnection()
+
+
+    if watchedStatus == True:
+        collection.update_one({"_id": ObjectId(id)},
+                              {"$set":{"watched": watchedStatus}},
+                              upsert=False
+                              )
+    elif watchedStatus == False:
+        collection.update_one({"_id": ObjectId(id)},
+                              {"$set":{"watched": watchedStatus}},
+                              upsert=False
+                              )
+
+
+def deleteMovie(id):
+
+    if id:
+        collection = getDBconnection()
+        collection.delete_one({"_id": ObjectId(id)})
+
+
+
+
+
+if __name__ == '__main__':
+
+    print getMoviesByPath("D:\\Movies\\Armaged_don.mkv")
